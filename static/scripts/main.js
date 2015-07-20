@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    load_posts();
     // Submit post on submit
     $('#post-form').on('submit', function(event){
         event.preventDefault();
@@ -17,16 +18,42 @@ $(document).ready(function() {
 });
 
 
+function load_posts(){
+    $.ajax({
+        url: 'api/v1/posts/',
+        type: 'GET',
+        success: function(json) {
+            for (var i = 0; i < json.length; i++) {
+                var dateString = convert_to_readable_date(json[i].created);
+                $("#talk").prepend("<li id='post-"+json[i].id+"'><strong>"+json[i].text+"</strong> - <em> "+json[i].author+"</em> - <span> "+dateString+
+                "</span> - <a id='delete-post-"+json[i].id+"'>delete me</a></li>");
+            };
+        },
+        error : function(xhr,errmsg,err) {
+            $('#results').html("<div class='alert-box alert radius' data-alert>Oops! We have encountered an error: "+errmsg+
+                " <a href='#' class='close'>&times;</a></div>"); // add the error to the dom
+            console.log(xhr.status + ": " + xhr.responseText); // provide a bit more info about the error to the console
+        }
+
+    })
+}
+
+// convert ugly date to human readable date using momentjs
+function convert_to_readable_date(date_time_string) {
+    var newDate = moment(date_time_string).format('DD MMM YYYY, h:mm:ss a');
+    return newDate;
+}
 
 // AJAX for posting
 function create_post() {
     var $post_text = $('#post-text');
     $.ajax({
-        url: 'create_post/', //the endpoint
+        url: 'api/v1/posts/', //the endpoint
         type: 'POST',
         data: {the_post: $post_text.val()},
         success: function(json){
-            $("#talk").prepend("<li id='post-"+ json.postpk +"'><strong>"+json.text+"</strong> - <em> "+json.author+"</em> - <span> "+json.created+"</span>- <a id='delete-post-"+json.postpk+"'>delete me</a></li>");
+            var dateString = convert_to_readable_date(json.created);
+            $("#talk").prepend("<li id='post-"+ json.id +"'><strong>"+json.text+"</strong> - <em> "+json.author+"</em> - <span> "+dateString+"</span>- <a id='delete-post-"+json.id+"'>delete me</a></li>");
             $post_text.val('');//clear the text field
 
         },
@@ -46,7 +73,7 @@ function create_post() {
 function delete_post(post_primary_key){
     if(confirm('are you sure you want to delete?') == true){
         $.ajax({
-            url: 'delete_post/', //endpoint
+            url: 'api/v1/posts/'+post_primary_key, //endpoint
             type: "DELETE", //http method
             data: {postpk: post_primary_key},
             success: function(json) {

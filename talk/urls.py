@@ -5,8 +5,10 @@ from django.conf.urls import patterns, url
 urlpatterns = patterns(
     'talk.views',
     url(r'^$', 'home'),
-    url(r'^create_post/$', 'create_post'),
-    url(r'^delete_post/$', 'delete_post'),
+
+    # api
+    url(r'^api/v1/posts/$', 'post_collection'),
+    url(r'^api/v1/posts/(?P<pk>[0-9]+)$', 'post_element'),
 
 
 )
